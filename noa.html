@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Noa</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+
+    .box {
+      position: relative;
+      width: min(80vw, 320px);
+      height: 180px;
+      display: grid;
+      place-items: center;
+      border: 2px solid #fff;
+      border-radius: 10px;
+      background: #000;
+      color: #fff;
+    }
+
+    .box h1 {
+      margin: 0;
+      font-size: 3rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+    }
+
+    .close {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      line-height: 1;
+      color: #fff;
+      background: transparent;
+      border: 1px solid #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: top 0.15s ease, left 0.15s ease;
+      touch-action: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="box" id="box">
+    <button class="close" id="close" aria-label="Cerrar">✕</button>
+    <h1>Noa</h1>
+  </div>
+
+  <script>
+    "use strict";
+
+    const box = document.getElementById("box");
+    const btn = document.getElementById("close");
+    const SIZE = 28;
+    const MARGIN = 6;
+    const TRIGGER = 80; // distancia a la que la X empieza a huir
+
+    function moveAway(px, py) {
+      const b = box.getBoundingClientRect();
+      const maxX = b.width - SIZE - MARGIN * 2 - 4;
+      const maxY = b.height - SIZE - MARGIN * 2 - 4;
+      let best = null;
+      let bestDist = -1;
+
+      // Prueba varias posiciones al azar y elige la más lejana al puntero
+      for (let i = 0; i < 12; i++) {
+        const x = MARGIN + Math.random() * maxX;
+        const y = MARGIN + Math.random() * maxY;
+        const cx = b.left + 2 + x + SIZE / 2;
+        const cy = b.top + 2 + y + SIZE / 2;
+        const d = Math.hypot(cx - px, cy - py);
+        if (d > bestDist) {
+          bestDist = d;
+          best = { x, y };
+        }
+      }
+      btn.style.left = best.x + "px";
+      btn.style.top = best.y + "px";
+    }
+
+    // Huye cuando el puntero se acerca
+    document.addEventListener("pointermove", (e) => {
+      const r = btn.getBoundingClientRect();
+      const d = Math.hypot(
+        e.clientX - (r.left + r.width / 2),
+        e.clientY - (r.top + r.height / 2)
+      );
+      if (d < TRIGGER) moveAway(e.clientX, e.clientY);
+    });
+
+    // Si logran tocarla (móvil o teclado), también se mueve y no cierra nada
+    ["pointerdown", "touchstart", "click"].forEach((type) => {
+      btn.addEventListener(type, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        moveAway(e.clientX ?? 0, e.clientY ?? 0);
+      }, { passive: false });
+    });
+
+    btn.addEventListener("keydown", (e) => {
+      e.preventDefault();
+      const r = btn.getBoundingClientRect();
+      moveAway(r.left + r.width / 2, r.top + r.height / 2);
+    });
+  </script>
+</body>
+</html>
